@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: wide
                         ? Row(
                             children: [
-                              Expanded(child: _BrandPanel(colors: colors)),
+                              const Expanded(child: _BrandPanel()),
                               Expanded(child: _LoginForm(
                                 colors: colors,
                                 emailController: emailController,
@@ -142,9 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
 }
 
 class _BrandPanel extends StatelessWidget {
-  final ColorScheme colors;
-
-  const _BrandPanel({required this.colors});
+  const _BrandPanel();
 
   @override
   Widget build(BuildContext context) {
