@@ -23,6 +23,8 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
   final searchFocus = FocusNode();
   late final Stream<QuerySnapshot<Map<String, dynamic>>> giangVienStream;
   String keyword = '';
+  String classFilter = 'all';
+  String sortBy = 'name';
 
   @override
   void initState() {
@@ -60,6 +62,11 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     if (result == null) return;
 
     try {
+      if (await service.idExists(result['IDGV'])) {
+        if (mounted) showMessage('Mã giảng viên đã tồn tại');
+        return;
+      }
+
       await service.addGiangVien(
         idgv: result['IDGV'],
         fullname: result['Fullname'],
@@ -88,6 +95,14 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     if (result == null) return;
 
     try {
+      if (await service.idExists(
+        result['IDGV'],
+        excludeDocumentId: documentId,
+      )) {
+        if (mounted) showMessage('Mã giảng viên đã tồn tại');
+        return;
+      }
+
       await service.updateGiangVien(
         documentId: documentId,
         idgv: result['IDGV'],
@@ -198,8 +213,35 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
             final data = doc.data();
             final text =
                 '${data['IDGV'] ?? ''} ${data['Fullname'] ?? ''}'.toLowerCase();
-            return text.contains(keyword.toLowerCase());
+            final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
+
+            final matchesSearch = text.contains(keyword.toLowerCase());
+            final matchesFilter = switch (classFilter) {
+              'zero' => classes == 0,
+              '1to3' => classes >= 1 && classes <= 3,
+              '4plus' => classes >= 4,
+              _ => true,
+            };
+
+            return matchesSearch && matchesFilter;
           }).toList();
+
+          filtered.sort((a, b) {
+            final aData = a.data();
+            final bData = b.data();
+            final aClasses = (aData['SumClass'] as num?)?.toInt() ?? 0;
+            final bClasses = (bData['SumClass'] as num?)?.toInt() ?? 0;
+
+            return switch (sortBy) {
+              'classAsc' => aClasses.compareTo(bClasses),
+              'classDesc' => bClasses.compareTo(aClasses),
+              _ => (aData['Fullname']?.toString() ?? '')
+                  .toLowerCase()
+                  .compareTo(
+                    (bData['Fullname']?.toString() ?? '').toLowerCase(),
+                  ),
+            };
+          });
 
           final totalClasses = docs.fold<int>(
             0,
@@ -302,6 +344,70 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                         );
                       },
                     ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                _FilterChip(
+                                  label: 'Tất cả',
+                                  selected: classFilter == 'all',
+                                  onSelected: () =>
+                                      setState(() => classFilter = 'all'),
+                                ),
+                                _FilterChip(
+                                  label: '0 lớp',
+                                  selected: classFilter == 'zero',
+                                  onSelected: () =>
+                                      setState(() => classFilter = 'zero'),
+                                ),
+                                _FilterChip(
+                                  label: '1–3 lớp',
+                                  selected: classFilter == '1to3',
+                                  onSelected: () =>
+                                      setState(() => classFilter = '1to3'),
+                                ),
+                                _FilterChip(
+                                  label: '≥ 4 lớp',
+                                  selected: classFilter == '4plus',
+                                  onSelected: () =>
+                                      setState(() => classFilter = '4plus'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        PopupMenuButton<String>(
+                          tooltip: 'Sắp xếp',
+                          initialValue: sortBy,
+                          onSelected: (value) =>
+                              setState(() => sortBy = value),
+                          itemBuilder: (_) => const [
+                            PopupMenuItem(
+                              value: 'name',
+                              child: Text('Tên A–Z'),
+                            ),
+                            PopupMenuItem(
+                              value: 'classDesc',
+                              child: Text('Số lớp: cao → thấp'),
+                            ),
+                            PopupMenuItem(
+                              value: 'classAsc',
+                              child: Text('Số lớp: thấp → cao'),
+                            ),
+                          ],
+                          child: OutlinedButton.icon(
+                            onPressed: null,
+                            icon: const Icon(Icons.sort_rounded),
+                            label: const Text('Sắp xếp'),
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 14),
                     Expanded(
                       child: Container(
@@ -392,6 +498,30 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+}
+
+class _FilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onSelected(),
       ),
     );
   }
