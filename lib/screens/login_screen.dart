@@ -64,127 +64,305 @@ class _LoginScreenState extends State<LoginScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: SizedBox(
-            width: 400,
-            child: Card(
-              child: Padding(
-                padding: const EdgeInsets.all(28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 44,
-                          height: 44,
-                          decoration: BoxDecoration(
-                            color: colors.primary,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.school_rounded,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'QL Học phần',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            Text(
-                              'Hệ thống quản trị',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                    const Text(
-                      'Đăng nhập',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Sử dụng tài khoản quản trị viên để tiếp tục.',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: const InputDecoration(
-                        labelText: 'Email',
-                        prefixIcon: Icon(Icons.email_outlined),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: passwordController,
-                      obscureText: hidePassword,
-                      onSubmitted: (_) {
-                        if (!isLoading) login();
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Mật khẩu',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          onPressed: () => setState(
-                            () => hidePassword = !hidePassword,
-                          ),
-                          icon: Icon(
-                            hidePassword
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                        ),
-                      ),
-                    ),
-                    if (errorMessage != null) ...[
-                      const SizedBox(height: 12),
+      backgroundColor: Colors.white,
+      body: LayoutBuilder(
+        builder: (context, box) {
+          final wide = box.maxWidth >= 820;
+
+          if (!wide) {
+            return Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 420),
+                  child: _LoginForm(
+                    colors: colors,
+                    emailController: emailController,
+                    passwordController: passwordController,
+                    hidePassword: hidePassword,
+                    isLoading: isLoading,
+                    errorMessage: errorMessage,
+                    onTogglePassword: () =>
+                        setState(() => hidePassword = !hidePassword),
+                    onLogin: login,
+                    showBrand: true,
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                flex: 5,
+                child: Container(
+                  color: const Color(0xFF153E75),
+                  padding: const EdgeInsets.all(56),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _Brand(),
+                      Spacer(),
                       Text(
-                        errorMessage!,
-                        style: TextStyle(color: colors.error),
+                        'QUẢN LÝ HỌC PHẦN',
+                        style: TextStyle(
+                          color: Color(0xFFBFDBFE),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.8,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      Text(
+                        'Quản lý thông tin\ngiảng viên',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          height: 1.15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      SizedBox(height: 22),
+                      _SideInfo(
+                        icon: Icons.people_outline,
+                        text: 'Quản lý danh sách giảng viên',
+                      ),
+                      SizedBox(height: 12),
+                      _SideInfo(
+                        icon: Icons.class_outlined,
+                        text: 'Theo dõi số lớp phụ trách',
+                      ),
+                      SizedBox(height: 12),
+                      _SideInfo(
+                        icon: Icons.storage_outlined,
+                        text: 'Dữ liệu lưu trên Firebase Firestore',
+                      ),
+                      Spacer(),
+                      Text(
+                        'QLHocPhan • Flutter + Firebase',
+                        style: TextStyle(
+                          color: Color(0xFF93C5FD),
+                          fontSize: 12,
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: isLoading ? null : login,
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : const Text('Đăng nhập'),
+                  ),
+                ),
+              ),
+              Expanded(
+                flex: 6,
+                child: Center(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 70,
+                      vertical: 40,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 430),
+                      child: _LoginForm(
+                        colors: colors,
+                        emailController: emailController,
+                        passwordController: passwordController,
+                        hidePassword: hidePassword,
+                        isLoading: isLoading,
+                        errorMessage: errorMessage,
+                        onTogglePassword: () =>
+                            setState(() => hidePassword = !hidePassword),
+                        onLogin: login,
                       ),
                     ),
-                  ],
+                  ),
                 ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Brand extends StatelessWidget {
+  const _Brand();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        Icon(Icons.school_rounded, color: Colors.white, size: 30),
+        SizedBox(width: 12),
+        Text(
+          'QLHocPhan',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 21,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SideInfo extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _SideInfo({
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFFBFDBFE), size: 20),
+        const SizedBox(width: 10),
+        Text(
+          text,
+          style: const TextStyle(
+            color: Color(0xFFE5E7EB),
+            fontSize: 14,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LoginForm extends StatelessWidget {
+  final ColorScheme colors;
+  final TextEditingController emailController;
+  final TextEditingController passwordController;
+  final bool hidePassword;
+  final bool isLoading;
+  final String? errorMessage;
+  final VoidCallback onTogglePassword;
+  final VoidCallback onLogin;
+  final bool showBrand;
+
+  const _LoginForm({
+    required this.colors,
+    required this.emailController,
+    required this.passwordController,
+    required this.hidePassword,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.onTogglePassword,
+    required this.onLogin,
+    this.showBrand = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showBrand) ...[
+          Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                color: const Color(0xFF153E75),
+                child: const Icon(
+                  Icons.school_rounded,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Text(
+                'QLHocPhan',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 34),
+        ],
+        const Text(
+          'Đăng nhập quản trị',
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 8),
+        const Text(
+          'Nhập tài khoản đã được tạo trên Firebase Authentication.',
+          style: TextStyle(
+            color: Color(0xFF64748B),
+            height: 1.5,
+          ),
+        ),
+        const SizedBox(height: 28),
+        const Text(
+          'Email',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 7),
+        TextField(
+          controller: emailController,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            hintText: 'admin@example.com',
+            prefixIcon: Icon(Icons.email_outlined),
+          ),
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          'Mật khẩu',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
+        const SizedBox(height: 7),
+        TextField(
+          controller: passwordController,
+          obscureText: hidePassword,
+          onSubmitted: (_) {
+            if (!isLoading) onLogin();
+          },
+          decoration: InputDecoration(
+            hintText: 'Nhập mật khẩu',
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              onPressed: onTogglePassword,
+              icon: Icon(
+                hidePassword
+                    ? Icons.visibility_outlined
+                    : Icons.visibility_off_outlined,
               ),
             ),
           ),
         ),
-      ),
+        if (errorMessage != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            errorMessage!,
+            style: TextStyle(color: colors.error),
+          ),
+        ],
+        const SizedBox(height: 22),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: isLoading ? null : onLogin,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Đăng nhập'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
