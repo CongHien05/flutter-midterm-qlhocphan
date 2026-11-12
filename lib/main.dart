@@ -20,8 +20,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const seed = Color(0xFF4254C5);
-
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Quản lý học phần',
