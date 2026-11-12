@@ -149,6 +149,31 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     }
   }
 
+  Future<void> confirmLogout() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất khỏi hệ thống?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Hủy'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('Đăng xuất'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await authService.logout();
+    }
+  }
+
   Future<void> showDetail(
     String documentId,
     Map<String, dynamic> data,
@@ -190,7 +215,7 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: OutlinedButton.icon(
-              onPressed: authService.logout,
+              onPressed: confirmLogout,
               icon: const Icon(Icons.logout_rounded, size: 18),
               label: const Text('Đăng xuất'),
             ),
