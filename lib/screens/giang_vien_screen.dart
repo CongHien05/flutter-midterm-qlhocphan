@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../services/auth_service.dart';
 import '../services/giang_vien_service.dart';
+import '../utils/json_exporter.dart';
 import '../widgets/giang_vien_detail.dart';
 import '../widgets/giang_vien_form.dart';
 
@@ -146,6 +148,31 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
       if (mounted) showMessage('Đã xóa giảng viên');
     } catch (_) {
       if (mounted) showMessage('Không thể xóa giảng viên');
+    }
+  }
+
+  void exportDatabase(
+    List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+  ) {
+    final data = docs.map((doc) {
+      final item = doc.data();
+      return {
+        'IDGV': item['IDGV']?.toString() ?? '',
+        'Fullname': item['Fullname']?.toString() ?? '',
+        'Image': item['Image']?.toString() ?? '',
+        'SumClass': (item['SumClass'] as num?)?.toInt() ?? 0,
+      };
+    }).toList();
+
+    final json = const JsonEncoder.withIndent(' ').convert({
+      'GiangVien': data,
+    });
+
+    try {
+      exportJsonFile(json);
+      showMessage('Đã xuất file GiangVien.json');
+    } catch (_) {
+      showMessage('Xuất JSON chỉ hỗ trợ trên Web');
     }
   }
 
@@ -343,6 +370,12 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                           ),
                         );
 
+                        final exportButton = OutlinedButton.icon(
+                          onPressed: () => exportDatabase(docs),
+                          icon: const Icon(Icons.download_rounded),
+                          label: const Text('Xuất JSON'),
+                        );
+
                         final addButton = FilledButton.icon(
                           onPressed: addGiangVien,
                           icon: const Icon(Icons.person_add_alt_1_rounded),
@@ -355,6 +388,10 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                             children: [
                               search,
                               const SizedBox(height: 10),
+                              if (kIsWeb) ...[
+                                exportButton,
+                                const SizedBox(height: 10),
+                              ],
                               addButton,
                             ],
                           );
@@ -364,6 +401,10 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                           children: [
                             Expanded(child: search),
                             const SizedBox(width: 12),
+                            if (kIsWeb) ...[
+                              exportButton,
+                              const SizedBox(width: 10),
+                            ],
                             addButton,
                           ],
                         );
