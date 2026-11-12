@@ -185,11 +185,12 @@ class _GiangVienFormState extends State<GiangVienForm> {
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),
-                    IconButton(
+                    IconButton.filledTonal(
+                      tooltip: 'Giảm số lớp',
                       onPressed: sumClass > 0
                           ? () => setState(() => sumClass--)
                           : null,
-                      icon: const Icon(Icons.remove_circle_outline),
+                      icon: const Icon(Icons.remove_rounded),
                     ),
                     SizedBox(
                       width: 34,
@@ -202,9 +203,10 @@ class _GiangVienFormState extends State<GiangVienForm> {
                         ),
                       ),
                     ),
-                    IconButton(
+                    IconButton.filledTonal(
+                      tooltip: 'Tăng số lớp',
                       onPressed: () => setState(() => sumClass++),
-                      icon: const Icon(Icons.add_circle_outline),
+                      icon: const Icon(Icons.add_rounded),
                     ),
                   ],
                 ),
@@ -222,7 +224,7 @@ class _GiangVienFormState extends State<GiangVienForm> {
       ),
       actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
       actions: [
-        TextButton(
+        OutlinedButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Hủy'),
         ),
