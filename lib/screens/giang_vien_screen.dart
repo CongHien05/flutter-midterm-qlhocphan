@@ -21,7 +21,14 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
   final authService = AuthService();
   final searchController = TextEditingController();
   final searchFocus = FocusNode();
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> giangVienStream;
   String keyword = '';
+
+  @override
+  void initState() {
+    super.initState();
+    giangVienStream = service.getGiangVien();
+  }
 
   @override
   void dispose() {
@@ -105,9 +112,14 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
             onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Hủy'),
           ),
-          FilledButton(
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
+            ),
             onPressed: () => Navigator.pop(dialogContext, true),
-            child: const Text('Xóa'),
+            icon: const Icon(Icons.delete_outline),
+            label: const Text('Xóa'),
           ),
         ],
       ),
@@ -160,16 +172,19 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            tooltip: 'Đăng xuất',
-            onPressed: authService.logout,
-            icon: const Icon(Icons.logout_rounded),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: OutlinedButton.icon(
+              onPressed: authService.logout,
+              icon: const Icon(Icons.logout_rounded, size: 18),
+              label: const Text('Đăng xuất'),
+            ),
           ),
           const SizedBox(width: 8),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: service.getGiangVien(),
+        stream: giangVienStream,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -234,41 +249,58 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: searchController,
-                            focusNode: searchFocus,
-                            onChanged: (value) {
-                              setState(() => keyword = value);
-                            },
-                            decoration: InputDecoration(
-                              hintText: 'Tìm theo mã hoặc tên giảng viên',
-                              prefixIcon:
-                                  const Icon(Icons.search_rounded),
-                              suffixIcon: keyword.isEmpty
-                                  ? null
-                                  : IconButton(
-                                      tooltip: 'Xóa tìm kiếm',
-                                      onPressed: () {
-                                        searchController.clear();
-                                        setState(() => keyword = '');
-                                        searchFocus.requestFocus();
-                                      },
-                                      icon:
-                                          const Icon(Icons.close_rounded),
-                                    ),
-                            ),
+                    LayoutBuilder(
+                      builder: (context, box) {
+                        final compact = box.maxWidth < 600;
+
+                        final search = TextField(
+                          controller: searchController,
+                          focusNode: searchFocus,
+                          onChanged: (value) {
+                            setState(() => keyword = value);
+                          },
+                          decoration: InputDecoration(
+                            hintText: 'Tìm theo mã hoặc tên giảng viên',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            suffixIcon: keyword.isEmpty
+                                ? null
+                                : IconButton(
+                                    tooltip: 'Xóa tìm kiếm',
+                                    onPressed: () {
+                                      searchController.clear();
+                                      setState(() => keyword = '');
+                                      searchFocus.requestFocus();
+                                    },
+                                    icon: const Icon(Icons.close_rounded),
+                                  ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        FilledButton.icon(
+                        );
+
+                        final addButton = FilledButton.icon(
                           onPressed: addGiangVien,
-                          icon: const Icon(Icons.add_rounded),
+                          icon: const Icon(Icons.person_add_alt_1_rounded),
                           label: const Text('Thêm giảng viên'),
-                        ),
-                      ],
+                        );
+
+                        if (compact) {
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              search,
+                              const SizedBox(height: 10),
+                              addButton,
+                            ],
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            Expanded(child: search),
+                            const SizedBox(width: 12),
+                            addButton,
+                          ],
+                        );
+                      },
                     ),
                     const SizedBox(height: 14),
                     Expanded(
