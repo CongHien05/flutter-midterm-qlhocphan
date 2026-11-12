@@ -89,19 +89,19 @@ class GiangVienDetail extends StatelessWidget {
       ),
       actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
       actions: [
-        TextButton.icon(
+        OutlinedButton.icon(
+          style: OutlinedButton.styleFrom(
+            foregroundColor: colors.error,
+            side: BorderSide(color: colors.error.withValues(alpha: 0.45)),
+          ),
           onPressed: () => Navigator.pop(context, 'delete'),
-          icon: Icon(Icons.delete_outline, color: colors.error),
-          label: Text('Xóa', style: TextStyle(color: colors.error)),
+          icon: const Icon(Icons.delete_outline),
+          label: const Text('Xóa'),
         ),
-        TextButton.icon(
+        FilledButton.icon(
           onPressed: () => Navigator.pop(context, 'edit'),
           icon: const Icon(Icons.edit_outlined),
           label: const Text('Sửa'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Đóng'),
         ),
       ],
     );
