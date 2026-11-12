@@ -19,7 +19,16 @@ class GiangVienScreen extends StatefulWidget {
 class _GiangVienScreenState extends State<GiangVienScreen> {
   final service = GiangVienService();
   final authService = AuthService();
+  final searchController = TextEditingController();
+  final searchFocus = FocusNode();
   String keyword = '';
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    searchFocus.dispose();
+    super.dispose();
+  }
 
   Uint8List? decodeImage(dynamic value) {
     if (value == null || value.toString().isEmpty) return null;
@@ -211,10 +220,25 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                       vertical: 4,
                     ),
                     child: TextField(
-                      onChanged: (value) => setState(() => keyword = value),
-                      decoration: const InputDecoration(
+                      controller: searchController,
+                      focusNode: searchFocus,
+                      onChanged: (value) {
+                        setState(() => keyword = value);
+                      },
+                      decoration: InputDecoration(
                         hintText: 'Tìm theo mã hoặc tên giảng viên',
-                        prefixIcon: Icon(Icons.search_rounded),
+                        prefixIcon: const Icon(Icons.search_rounded),
+                        suffixIcon: keyword.isEmpty
+                            ? null
+                            : IconButton(
+                                tooltip: 'Xóa tìm kiếm',
+                                onPressed: () {
+                                  searchController.clear();
+                                  setState(() => keyword = '');
+                                  searchFocus.requestFocus();
+                                },
+                                icon: const Icon(Icons.close_rounded),
+                              ),
                       ),
                     ),
                   ),
