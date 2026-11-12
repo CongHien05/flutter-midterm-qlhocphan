@@ -23,20 +23,29 @@ class GiangVienDetail extends StatelessWidget {
     }
 
     return AlertDialog(
-      title: const Text('Thông tin giảng viên'),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
       content: SizedBox(
-        width: 400,
+        width: 410,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
             CircleAvatar(
-              radius: 52,
+              radius: 54,
               backgroundColor: colors.primaryContainer,
               backgroundImage: imageProvider,
               child: imageProvider == null
                   ? Icon(
                       Icons.person_rounded,
-                      size: 48,
+                      size: 50,
                       color: colors.primary,
                     )
                   : null,
@@ -46,24 +55,39 @@ class GiangVienDetail extends StatelessWidget {
               data['Fullname']?.toString() ?? '',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
               ),
             ),
-            const SizedBox(height: 18),
-            _InfoRow(
-              icon: Icons.badge_outlined,
-              label: 'Mã giảng viên',
-              value: data['IDGV']?.toString() ?? '',
+            const SizedBox(height: 6),
+            Text(
+              'Giảng viên',
+              style: TextStyle(color: Colors.grey.shade600),
             ),
-            _InfoRow(
-              icon: Icons.class_outlined,
-              label: 'Tổng số lớp',
-              value: data['SumClass']?.toString() ?? '0',
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: _InfoCard(
+                    icon: Icons.badge_outlined,
+                    label: 'Mã giảng viên',
+                    value: data['IDGV']?.toString() ?? '',
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _InfoCard(
+                    icon: Icons.class_outlined,
+                    label: 'Số lớp',
+                    value: data['SumClass']?.toString() ?? '0',
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
       actions: [
         TextButton.icon(
           onPressed: () => Navigator.pop(context, 'delete'),
@@ -84,12 +108,12 @@ class GiangVienDetail extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
+class _InfoCard extends StatelessWidget {
   final IconData icon;
   final String label;
   final String value;
 
-  const _InfoRow({
+  const _InfoCard({
     required this.icon,
     required this.label,
     required this.value,
@@ -97,12 +121,27 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      dense: true,
-      contentPadding: EdgeInsets.zero,
-      leading: Icon(icon),
-      title: Text(label),
-      subtitle: Text(value),
+    final colors = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: colors.primary),
+          const SizedBox(height: 8),
+          Text(label, style: TextStyle(color: Colors.grey.shade600)),
+          const SizedBox(height: 3),
+          Text(
+            value,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
     );
   }
 }
