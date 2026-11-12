@@ -77,6 +77,7 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
         image: result['Image'],
         sumClass: result['SumClass'],
       );
+
       if (mounted) showMessage('Thêm giảng viên thành công');
     } catch (_) {
       if (mounted) showMessage('Không thể thêm giảng viên');
@@ -114,6 +115,7 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
         image: result['Image'],
         sumClass: result['SumClass'],
       );
+
       if (mounted) showMessage('Cập nhật thành công');
     } catch (_) {
       if (mounted) showMessage('Không thể cập nhật');
@@ -124,26 +126,19 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text(
-          'Xóa giảng viên?',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: Text(
-          'Dữ liệu của "$fullname" sẽ bị xóa khỏi Firestore.',
-        ),
+        title: const Text('Xác nhận xóa'),
+        content: Text('Bạn có chắc muốn xóa giảng viên "$fullname"?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
             child: const Text('Hủy'),
           ),
-          FilledButton.icon(
+          FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: Theme.of(dialogContext).colorScheme.error,
-              foregroundColor: Theme.of(dialogContext).colorScheme.onError,
             ),
             onPressed: () => Navigator.pop(dialogContext, true),
-            icon: const Icon(Icons.delete_outline_rounded),
-            label: const Text('Xóa'),
+            child: const Text('Xóa'),
           ),
         ],
       ),
@@ -188,20 +183,12 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        icon: const Icon(Icons.logout_rounded, size: 32),
-        title: const Text(
-          'Đăng xuất?',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        content: const Text(
-          'Bạn có chắc muốn kết thúc phiên làm việc hiện tại?',
-          textAlign: TextAlign.center,
-        ),
-        actionsAlignment: MainAxisAlignment.center,
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất khỏi hệ thống?'),
         actions: [
-          OutlinedButton(
+          TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
-            child: const Text('Ở lại'),
+            child: const Text('Hủy'),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogContext, true),
@@ -243,41 +230,21 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 68,
         titleSpacing: 20,
-        title: Row(
-          children: [
-            Container(
-              width: 38,
-              height: 38,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF4F46E5), Color(0xFF6D5FEA)],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.school_rounded,
-                color: Colors.white,
-                size: 21,
-              ),
-            ),
-            const SizedBox(width: 11),
-            const Text(
-              'QL Học phần',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-          ],
+        title: const Text(
+          'Quản lý giảng viên',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1),
         ),
         actions: [
           if (MediaQuery.sizeOf(context).width >= 600)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              child: OutlinedButton.icon(
-                onPressed: confirmLogout,
-                icon: const Icon(Icons.logout_rounded, size: 18),
-                label: const Text('Đăng xuất'),
-              ),
+            TextButton.icon(
+              onPressed: confirmLogout,
+              icon: const Icon(Icons.logout_rounded, size: 18),
+              label: const Text('Đăng xuất'),
             )
           else
             IconButton(
@@ -344,36 +311,42 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
           Map<String, dynamic>? topLecturer;
           for (final doc in docs) {
             final data = doc.data();
-            final current = (data['SumClass'] as num?)?.toInt() ?? 0;
+            final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
             final top = (topLecturer?['SumClass'] as num?)?.toInt() ?? -1;
-            if (current > top) topLecturer = data;
+            if (classes > top) topLecturer = data;
           }
 
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1080),
+              constraints: const BoxConstraints(maxWidth: 1050),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _DashboardHeader(colors: colors),
-                    const SizedBox(height: 20),
-                    _StatsSection(
+                    const Text(
+                      'Tổng quan',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    _StatsRow(
                       lecturerCount: docs.length,
                       totalClasses: totalClasses,
                       topLecturer:
-                          topLecturer?['Fullname']?.toString() ?? 'Chưa có',
+                          topLecturer?['Fullname']?.toString() ?? '-',
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 16),
                     _Toolbar(
                       searchController: searchController,
                       searchFocus: searchFocus,
                       keyword: keyword,
                       onSearchChanged: (value) =>
                           setState(() => keyword = value),
-                      onClearSearch: () {
+                      onClear: () {
                         searchController.clear();
                         setState(() => keyword = '');
                         searchFocus.requestFocus();
@@ -381,8 +354,8 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                       onExport: () => exportDatabase(docs),
                       onAdd: addGiangVien,
                     ),
-                    const SizedBox(height: 12),
-                    _FilterBar(
+                    const SizedBox(height: 10),
+                    _FilterRow(
                       selectedFilter: classFilter,
                       sortBy: sortBy,
                       onFilterChanged: (value) =>
@@ -390,15 +363,14 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                       onSortChanged: (value) =>
                           setState(() => sortBy = value),
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 12),
                     Expanded(
-                      child: _LecturerPanel(
+                      child: _LecturerList(
                         docs: filtered,
                         decodeImage: decodeImage,
                         onOpen: showDetail,
                       ),
                     ),
-                    const SizedBox(height: 18),
                   ],
                 ),
               ),
@@ -410,81 +382,12 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
   }
 }
 
-class _DashboardHeader extends StatelessWidget {
-  final ColorScheme colors;
-
-  const _DashboardHeader({required this.colors});
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final compact = box.maxWidth < 600;
-
-        return Flex(
-          direction: compact ? Axis.vertical : Axis.horizontal,
-          crossAxisAlignment:
-              compact ? CrossAxisAlignment.start : CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tổng quan giảng viên',
-                  style: TextStyle(
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.6,
-                  ),
-                ),
-                SizedBox(height: 5),
-                Text(
-                  'Quản lý dữ liệu và theo dõi số lớp đang phụ trách.',
-                  style: TextStyle(color: Color(0xFF74798B)),
-                ),
-              ],
-            ),
-            if (compact) const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFECFDF3),
-                borderRadius: BorderRadius.circular(99),
-                border: Border.all(color: const Color(0xFFCDEFD9)),
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    radius: 4,
-                    backgroundColor: Color(0xFF22C55E),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Firebase realtime',
-                    style: TextStyle(
-                      color: Color(0xFF15803D),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _StatsSection extends StatelessWidget {
+class _StatsRow extends StatelessWidget {
   final int lecturerCount;
   final int totalClasses;
   final String topLecturer;
 
-  const _StatsSection({
+  const _StatsRow({
     required this.lecturerCount,
     required this.totalClasses,
     required this.topLecturer,
@@ -496,37 +399,31 @@ class _StatsSection extends StatelessWidget {
       builder: (context, box) {
         final compact = box.maxWidth < 700;
 
-        final cards = [
-          _StatCard(
-            icon: Icons.groups_2_rounded,
-            label: 'Tổng giảng viên',
+        final items = [
+          _StatBox(
+            label: 'Giảng viên',
             value: lecturerCount.toString(),
-            accent: const Color(0xFF5B5BD6),
-            soft: const Color(0xFFEEEEFF),
+            icon: Icons.people_outline,
           ),
-          _StatCard(
-            icon: Icons.auto_stories_rounded,
+          _StatBox(
             label: 'Tổng số lớp',
             value: totalClasses.toString(),
-            accent: const Color(0xFF0891B2),
-            soft: const Color(0xFFE6F8FC),
+            icon: Icons.class_outlined,
           ),
-          _StatCard(
-            icon: Icons.workspace_premium_rounded,
+          _StatBox(
             label: 'Nhiều lớp nhất',
             value: topLecturer,
-            accent: const Color(0xFFD97706),
-            soft: const Color(0xFFFFF5E6),
-            smallValue: true,
+            icon: Icons.star_border_rounded,
+            small: true,
           ),
         ];
 
         if (compact) {
           return Column(
             children: [
-              for (var i = 0; i < cards.length; i++) ...[
-                SizedBox(width: double.infinity, child: cards[i]),
-                if (i < cards.length - 1) const SizedBox(height: 10),
+              for (var i = 0; i < items.length; i++) ...[
+                SizedBox(width: double.infinity, child: items[i]),
+                if (i < items.length - 1) const SizedBox(height: 8),
               ],
             ],
           );
@@ -534,9 +431,9 @@ class _StatsSection extends StatelessWidget {
 
         return Row(
           children: [
-            for (var i = 0; i < cards.length; i++) ...[
-              Expanded(child: cards[i]),
-              if (i < cards.length - 1) const SizedBox(width: 12),
+            for (var i = 0; i < items.length; i++) ...[
+              Expanded(child: items[i]),
+              if (i < items.length - 1) const SizedBox(width: 10),
             ],
           ],
         );
@@ -545,40 +442,30 @@ class _StatsSection extends StatelessWidget {
   }
 }
 
-class _StatCard extends StatelessWidget {
-  final IconData icon;
+class _StatBox extends StatelessWidget {
   final String label;
   final String value;
-  final Color accent;
-  final Color soft;
-  final bool smallValue;
+  final IconData icon;
+  final bool small;
 
-  const _StatCard({
-    required this.icon,
+  const _StatBox({
     required this.label,
     required this.value,
-    required this.accent,
-    required this.soft,
-    this.smallValue = false,
+    required this.icon,
+    this.small = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: soft,
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(icon, color: accent),
-            ),
-            const SizedBox(width: 14),
+            Icon(icon, color: primary),
+            const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -586,19 +473,18 @@ class _StatCard extends StatelessWidget {
                   Text(
                     label,
                     style: const TextStyle(
-                      color: Color(0xFF74798B),
+                      color: Colors.grey,
                       fontSize: 13,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Text(
                     value,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: smallValue ? 17 : 25,
-                      fontWeight: FontWeight.w800,
-                      color: const Color(0xFF202334),
+                      fontSize: small ? 16 : 22,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ],
@@ -616,7 +502,7 @@ class _Toolbar extends StatelessWidget {
   final FocusNode searchFocus;
   final String keyword;
   final ValueChanged<String> onSearchChanged;
-  final VoidCallback onClearSearch;
+  final VoidCallback onClear;
   final VoidCallback onExport;
   final VoidCallback onAdd;
 
@@ -625,7 +511,7 @@ class _Toolbar extends StatelessWidget {
     required this.searchFocus,
     required this.keyword,
     required this.onSearchChanged,
-    required this.onClearSearch,
+    required this.onClear,
     required this.onExport,
     required this.onAdd,
   });
@@ -634,35 +520,34 @@ class _Toolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, box) {
-        final compact = box.maxWidth < 700;
+        final compact = box.maxWidth < 650;
 
         final search = TextField(
           controller: searchController,
           focusNode: searchFocus,
           onChanged: onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Tìm theo mã hoặc tên giảng viên...',
-            prefixIcon: const Icon(Icons.search_rounded),
+            hintText: 'Tìm mã hoặc tên giảng viên',
+            prefixIcon: const Icon(Icons.search),
             suffixIcon: keyword.isEmpty
                 ? null
                 : IconButton(
-                    tooltip: 'Xóa tìm kiếm',
-                    onPressed: onClearSearch,
-                    icon: const Icon(Icons.close_rounded),
+                    onPressed: onClear,
+                    icon: const Icon(Icons.close),
                   ),
           ),
         );
 
         final export = OutlinedButton.icon(
           onPressed: onExport,
-          icon: const Icon(Icons.download_rounded),
+          icon: const Icon(Icons.download_outlined),
           label: const Text('Xuất JSON'),
         );
 
         final add = FilledButton.icon(
           onPressed: onAdd,
-          icon: const Icon(Icons.person_add_alt_1_rounded),
-          label: const Text('Thêm giảng viên'),
+          icon: const Icon(Icons.add),
+          label: const Text('Thêm'),
         );
 
         if (compact) {
@@ -670,12 +555,12 @@ class _Toolbar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   if (kIsWeb) ...[
                     Expanded(child: export),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 8),
                   ],
                   Expanded(child: add),
                 ],
@@ -688,10 +573,10 @@ class _Toolbar extends StatelessWidget {
           children: [
             Expanded(child: search),
             if (kIsWeb) ...[
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               export,
             ],
-            const SizedBox(width: 10),
+            const SizedBox(width: 8),
             add,
           ],
         );
@@ -700,13 +585,13 @@ class _Toolbar extends StatelessWidget {
   }
 }
 
-class _FilterBar extends StatelessWidget {
+class _FilterRow extends StatelessWidget {
   final String selectedFilter;
   final String sortBy;
   final ValueChanged<String> onFilterChanged;
   final ValueChanged<String> onSortChanged;
 
-  const _FilterBar({
+  const _FilterRow({
     required this.selectedFilter,
     required this.sortBy,
     required this.onFilterChanged,
@@ -718,36 +603,35 @@ class _FilterBar extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: [
-                _FilterChip(
-                  label: 'Tất cả',
-                  value: 'all',
-                  selected: selectedFilter,
-                  onChanged: onFilterChanged,
-                ),
-                _FilterChip(
-                  label: '0 lớp',
-                  value: 'zero',
-                  selected: selectedFilter,
-                  onChanged: onFilterChanged,
-                ),
-                _FilterChip(
-                  label: '1–3 lớp',
-                  value: '1to3',
-                  selected: selectedFilter,
-                  onChanged: onFilterChanged,
-                ),
-                _FilterChip(
-                  label: '≥ 4 lớp',
-                  value: '4plus',
-                  selected: selectedFilter,
-                  onChanged: onFilterChanged,
-                ),
-              ],
-            ),
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              _FilterChip(
+                label: 'Tất cả',
+                value: 'all',
+                selected: selectedFilter,
+                onChanged: onFilterChanged,
+              ),
+              _FilterChip(
+                label: '0 lớp',
+                value: 'zero',
+                selected: selectedFilter,
+                onChanged: onFilterChanged,
+              ),
+              _FilterChip(
+                label: '1–3 lớp',
+                value: '1to3',
+                selected: selectedFilter,
+                onChanged: onFilterChanged,
+              ),
+              _FilterChip(
+                label: '≥ 4 lớp',
+                value: '4plus',
+                selected: selectedFilter,
+                onChanged: onFilterChanged,
+              ),
+            ],
           ),
         ),
         const SizedBox(width: 8),
@@ -759,29 +643,21 @@ class _FilterBar extends StatelessWidget {
             PopupMenuItem(value: 'name', child: Text('Tên A–Z')),
             PopupMenuItem(
               value: 'classDesc',
-              child: Text('Số lớp: cao → thấp'),
+              child: Text('Số lớp cao → thấp'),
             ),
             PopupMenuItem(
               value: 'classAsc',
-              child: Text('Số lớp: thấp → cao'),
+              child: Text('Số lớp thấp → cao'),
             ),
           ],
-          child: Container(
-            height: 42,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(13),
-              border: Border.all(color: const Color(0xFFDADDEA)),
-            ),
-            child: const Row(
+          child: const Padding(
+            padding: EdgeInsets.all(8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.swap_vert_rounded, size: 19),
-                SizedBox(width: 7),
-                Text(
-                  'Sắp xếp',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
+                Icon(Icons.sort, size: 18),
+                SizedBox(width: 5),
+                Text('Sắp xếp'),
               ],
             ),
           ),
@@ -806,37 +682,21 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final active = selected == value;
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: active,
-        showCheckmark: false,
-        onSelected: (_) => onChanged(value),
-        side: BorderSide(
-          color: active
-              ? Theme.of(context).colorScheme.primary
-              : const Color(0xFFE0E3EC),
-        ),
-        labelStyle: TextStyle(
-          fontWeight: FontWeight.w600,
-          color: active
-              ? Theme.of(context).colorScheme.primary
-              : const Color(0xFF656B7E),
-        ),
-      ),
+    return FilterChip(
+      label: Text(label),
+      selected: selected == value,
+      showCheckmark: false,
+      onSelected: (_) => onChanged(value),
     );
   }
 }
 
-class _LecturerPanel extends StatelessWidget {
+class _LecturerList extends StatelessWidget {
   final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs;
   final Uint8List? Function(dynamic) decodeImage;
   final Future<void> Function(String, Map<String, dynamic>) onOpen;
 
-  const _LecturerPanel({
+  const _LecturerList({
     required this.docs,
     required this.decodeImage,
     required this.onOpen,
@@ -844,216 +704,113 @@ class _LecturerPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Card(
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 14, 14),
-            child: Row(
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            color: const Color(0xFFF8F9FA),
+            child: const Row(
               children: [
-                const Expanded(
+                Expanded(
+                  flex: 4,
                   child: Text(
-                    'Danh sách giảng viên',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
+                    'Giảng viên',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: colors.primaryContainer,
-                    borderRadius: BorderRadius.circular(99),
-                  ),
+                Expanded(
+                  flex: 2,
                   child: Text(
-                    '${docs.length} kết quả',
-                    style: TextStyle(
-                      color: colors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                    ),
+                    'Mã GV',
+                    style: TextStyle(fontWeight: FontWeight.w600),
                   ),
                 ),
+                SizedBox(
+                  width: 90,
+                  child: Text(
+                    'Số lớp',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                SizedBox(width: 32),
               ],
             ),
           ),
           const Divider(height: 1),
           Expanded(
             child: docs.isEmpty
-                ? const _EmptyState()
+                ? const Center(child: Text('Không có dữ liệu'))
                 : ListView.separated(
-                    padding: const EdgeInsets.all(10),
                     itemCount: docs.length,
-                    separatorBuilder: (_, __) =>
-                        const Divider(height: 1, indent: 76),
+                    separatorBuilder: (_, __) => const Divider(height: 1),
                     itemBuilder: (context, index) {
                       final document = docs[index];
                       final data = document.data();
                       final imageBytes = decodeImage(data['Image']);
-                      final classes =
-                          (data['SumClass'] as num?)?.toInt() ?? 0;
 
-                      return Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(16),
-                          hoverColor: colors.primary.withValues(alpha: 0.04),
-                          onTap: () => onOpen(document.id, data),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 11,
-                            ),
-                            child: Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 27,
-                                  backgroundColor: colors.primaryContainer,
-                                  backgroundImage: imageBytes != null
-                                      ? MemoryImage(imageBytes)
-                                      : null,
-                                  child: imageBytes == null
-                                      ? Icon(
-                                          Icons.person_rounded,
-                                          color: colors.primary,
-                                        )
-                                      : null,
-                                ),
-                                const SizedBox(width: 14),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
+                      return InkWell(
+                        onTap: () => onOpen(document.id, data),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 4,
+                                child: Row(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 21,
+                                      backgroundImage: imageBytes != null
+                                          ? MemoryImage(imageBytes)
+                                          : null,
+                                      child: imageBytes == null
+                                          ? const Icon(Icons.person_outline)
+                                          : null,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
                                         data['Fullname']?.toString() ?? '',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 15,
-                                        ),
                                       ),
-                                      const SizedBox(height: 5),
-                                      Row(
-                                        children: [
-                                          Icon(
-                                            Icons.badge_outlined,
-                                            size: 15,
-                                            color: Colors.grey.shade500,
-                                          ),
-                                          const SizedBox(width: 5),
-                                          Text(
-                                            data['IDGV']?.toString() ?? '',
-                                            style: const TextStyle(
-                                              color: Color(0xFF74798B),
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
-                                _ClassBadge(classes: classes),
-                                const SizedBox(width: 10),
-                                Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF3F4FA),
-                                    borderRadius: BorderRadius.circular(11),
-                                  ),
-                                  child: const Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    size: 14,
-                                    color: Color(0xFF74798B),
-                                  ),
+                              ),
+                              Expanded(
+                                flex: 2,
+                                child: Text(
+                                  data['IDGV']?.toString() ?? '',
                                 ),
-                              ],
-                            ),
+                              ),
+                              SizedBox(
+                                width: 90,
+                                child: Text(
+                                  data['SumClass']?.toString() ?? '0',
+                                ),
+                              ),
+                              const SizedBox(
+                                width: 32,
+                                child: Icon(
+                                  Icons.chevron_right,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
                     },
                   ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ClassBadge extends StatelessWidget {
-  final int classes;
-
-  const _ClassBadge({required this.classes});
-
-  @override
-  Widget build(BuildContext context) {
-    final Color background;
-    final Color foreground;
-
-    if (classes == 0) {
-      background = const Color(0xFFF1F3F6);
-      foreground = const Color(0xFF69707D);
-    } else if (classes <= 3) {
-      background = const Color(0xFFE8F7EE);
-      foreground = const Color(0xFF15803D);
-    } else {
-      background = const Color(0xFFFFF2E2);
-      foreground = const Color(0xFFB45309);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(99),
-      ),
-      child: Text(
-        '$classes lớp',
-        style: TextStyle(
-          color: foreground,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Color(0xFFF0F1F7),
-            child: Icon(
-              Icons.person_search_rounded,
-              color: Color(0xFF7C8193),
-            ),
-          ),
-          SizedBox(height: 12),
-          Text(
-            'Không tìm thấy giảng viên',
-            style: TextStyle(fontWeight: FontWeight.w700),
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Thử thay đổi từ khóa hoặc bộ lọc.',
-            style: TextStyle(color: Color(0xFF8A8FA1)),
           ),
         ],
       ),
