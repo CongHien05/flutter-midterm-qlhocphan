@@ -44,9 +44,7 @@ class _GiangVienFormState extends State<GiangVienForm> {
     if (imageBase64.isNotEmpty) {
       try {
         imageBytes = base64Decode(imageBase64);
-      } catch (_) {
-        imageBytes = null;
-      }
+      } catch (_) {}
     }
   }
 
@@ -56,7 +54,6 @@ class _GiangVienFormState extends State<GiangVienForm> {
       maxWidth: 400,
       imageQuality: 25,
     );
-
     if (image == null) return;
 
     final bytes = await image.readAsBytes();
@@ -71,9 +68,7 @@ class _GiangVienFormState extends State<GiangVienForm> {
     final fullname = fullnameController.text.trim();
 
     if (idgv.isEmpty || fullname.isEmpty) {
-      setState(() {
-        errorMessage = 'Vui lòng nhập đầy đủ thông tin';
-      });
+      setState(() => errorMessage = 'Vui lòng nhập đầy đủ thông tin');
       return;
     }
 
@@ -94,35 +89,70 @@ class _GiangVienFormState extends State<GiangVienForm> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return AlertDialog(
-      title: Text(widget.isEdit ? 'Sửa giảng viên' : 'Thêm giảng viên'),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+      ),
+      title: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: colors.primaryContainer,
+            child: Icon(
+              widget.isEdit ? Icons.edit_outlined : Icons.person_add_outlined,
+              color: colors.primary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(widget.isEdit ? 'Sửa giảng viên' : 'Thêm giảng viên'),
+        ],
+      ),
       content: SizedBox(
-        width: 420,
+        width: 430,
         child: SingleChildScrollView(
           child: Column(
-            mainAxisSize: MainAxisSize.min,
             children: [
               GestureDetector(
                 onTap: pickImage,
-                child: CircleAvatar(
-                  radius: 42,
-                  backgroundImage:
-                      imageBytes != null ? MemoryImage(imageBytes!) : null,
-                  child: imageBytes == null
-                      ? const Icon(Icons.add_a_photo_outlined, size: 30)
-                      : null,
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 48,
+                      backgroundColor: colors.primaryContainer,
+                      backgroundImage:
+                          imageBytes != null ? MemoryImage(imageBytes!) : null,
+                      child: imageBytes == null
+                          ? Icon(
+                              Icons.person_rounded,
+                              size: 42,
+                              color: colors.primary,
+                            )
+                          : null,
+                    ),
+                    CircleAvatar(
+                      radius: 16,
+                      backgroundColor: colors.primary,
+                      child: const Icon(
+                        Icons.camera_alt_outlined,
+                        size: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              TextButton.icon(
+              const SizedBox(height: 8),
+              TextButton(
                 onPressed: pickImage,
-                icon: const Icon(Icons.photo_library_outlined),
-                label: const Text('Chọn hình ảnh'),
+                child: const Text('Chọn hình ảnh'),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: idgvController,
                 decoration: const InputDecoration(
-                  labelText: 'IDGV',
+                  labelText: 'Mã giảng viên',
                   prefixIcon: Icon(Icons.badge_outlined),
                 ),
               ),
@@ -130,31 +160,45 @@ class _GiangVienFormState extends State<GiangVienForm> {
               TextField(
                 controller: fullnameController,
                 decoration: const InputDecoration(
-                  labelText: 'Fullname',
+                  labelText: 'Họ và tên',
                   prefixIcon: Icon(Icons.person_outline),
                 ),
               ),
               const SizedBox(height: 12),
-              InputDecorator(
-                decoration: const InputDecoration(
-                  labelText: 'SumClass',
-                  prefixIcon: Icon(Icons.class_outlined),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: const Color(0xFFE3E7EF)),
+                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white,
                 ),
                 child: Row(
                   children: [
+                    const Icon(Icons.class_outlined),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'Tổng số lớp',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
                     IconButton(
                       onPressed: sumClass > 0
                           ? () => setState(() => sumClass--)
                           : null,
                       icon: const Icon(Icons.remove_circle_outline),
                     ),
-                    Expanded(
+                    SizedBox(
+                      width: 34,
                       child: Text(
                         '$sumClass',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                     ),
@@ -169,23 +213,23 @@ class _GiangVienFormState extends State<GiangVienForm> {
                 const SizedBox(height: 10),
                 Text(
                   errorMessage!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: TextStyle(color: colors.error),
                 ),
               ],
             ],
           ),
         ),
       ),
+      actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text('Hủy'),
         ),
-        FilledButton(
+        FilledButton.icon(
           onPressed: submit,
-          child: Text(widget.isEdit ? 'Lưu' : 'Thêm'),
+          icon: Icon(widget.isEdit ? Icons.save_outlined : Icons.add_rounded),
+          label: Text(widget.isEdit ? 'Lưu thay đổi' : 'Thêm giảng viên'),
         ),
       ],
     );
