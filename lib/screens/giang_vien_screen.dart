@@ -270,15 +270,22 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
           ],
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 11),
-            child: OutlinedButton.icon(
+          if (MediaQuery.sizeOf(context).width >= 600)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              child: OutlinedButton.icon(
+                onPressed: confirmLogout,
+                icon: const Icon(Icons.logout_rounded, size: 18),
+                label: const Text('Đăng xuất'),
+              ),
+            )
+          else
+            IconButton(
+              tooltip: 'Đăng xuất',
               onPressed: confirmLogout,
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Đăng xuất'),
+              icon: const Icon(Icons.logout_rounded),
             ),
-          ),
-          const SizedBox(width: 18),
+          const SizedBox(width: 12),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
