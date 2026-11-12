@@ -226,124 +226,114 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
-    return Scaffold(
-      appBar: AppBar(
-        titleSpacing: 20,
-        title: const Text(
-          'Quản lý giảng viên',
-          style: TextStyle(fontWeight: FontWeight.w700),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1),
-        ),
-        actions: [
-          if (MediaQuery.sizeOf(context).width >= 600)
-            TextButton.icon(
-              onPressed: confirmLogout,
-              icon: const Icon(Icons.logout_rounded, size: 18),
-              label: const Text('Đăng xuất'),
-            )
-          else
-            IconButton(
-              tooltip: 'Đăng xuất',
-              onPressed: confirmLogout,
-              icon: const Icon(Icons.logout_rounded),
-            ),
-          const SizedBox(width: 12),
-        ],
-      ),
-      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-        stream: giangVienStream,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return const Center(child: Text('Không thể tải dữ liệu'));
-          }
-
-          final docs = snapshot.data?.docs ?? [];
-
-          final filtered = docs.where((doc) {
-            final data = doc.data();
-            final text =
-                '${data['IDGV'] ?? ''} ${data['Fullname'] ?? ''}'.toLowerCase();
-            final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
-
-            final matchesSearch = text.contains(keyword.toLowerCase());
-            final matchesFilter = switch (classFilter) {
-              'zero' => classes == 0,
-              '1to3' => classes >= 1 && classes <= 3,
-              '4plus' => classes >= 4,
-              _ => true,
-            };
-
-            return matchesSearch && matchesFilter;
-          }).toList();
-
-          filtered.sort((a, b) {
-            final aData = a.data();
-            final bData = b.data();
-            final aClasses = (aData['SumClass'] as num?)?.toInt() ?? 0;
-            final bClasses = (bData['SumClass'] as num?)?.toInt() ?? 0;
-
-            return switch (sortBy) {
-              'classAsc' => aClasses.compareTo(bClasses),
-              'classDesc' => bClasses.compareTo(aClasses),
-              _ => (aData['Fullname']?.toString() ?? '')
-                  .toLowerCase()
-                  .compareTo(
-                    (bData['Fullname']?.toString() ?? '').toLowerCase(),
-                  ),
-            };
-          });
-
-          final totalClasses = docs.fold<int>(
-            0,
-            (sum, doc) =>
-                sum + ((doc.data()['SumClass'] as num?)?.toInt() ?? 0),
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: giangVienStream,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
           );
+        }
 
-          Map<String, dynamic>? topLecturer;
-          for (final doc in docs) {
-            final data = doc.data();
-            final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
-            final top = (topLecturer?['SumClass'] as num?)?.toInt() ?? -1;
-            if (classes > top) topLecturer = data;
-          }
+        if (snapshot.hasError) {
+          return const Scaffold(
+            body: Center(child: Text('Không thể tải dữ liệu')),
+          );
+        }
 
-          return Align(
-            alignment: Alignment.topCenter,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 1050),
-              child: Padding(
-                padding: const EdgeInsets.all(18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Tổng quan',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
+        final docs = snapshot.data?.docs ?? [];
+
+        final filtered = docs.where((doc) {
+          final data = doc.data();
+          final text =
+              '${data['IDGV'] ?? ''} ${data['Fullname'] ?? ''}'.toLowerCase();
+          final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
+
+          final matchesSearch = text.contains(keyword.toLowerCase());
+          final matchesFilter = switch (classFilter) {
+            'zero' => classes == 0,
+            '1to3' => classes >= 1 && classes <= 3,
+            '4plus' => classes >= 4,
+            _ => true,
+          };
+
+          return matchesSearch && matchesFilter;
+        }).toList();
+
+        filtered.sort((a, b) {
+          final aData = a.data();
+          final bData = b.data();
+          final aClasses = (aData['SumClass'] as num?)?.toInt() ?? 0;
+          final bClasses = (bData['SumClass'] as num?)?.toInt() ?? 0;
+
+          return switch (sortBy) {
+            'classAsc' => aClasses.compareTo(bClasses),
+            'classDesc' => bClasses.compareTo(aClasses),
+            _ => (aData['Fullname']?.toString() ?? '')
+                .toLowerCase()
+                .compareTo(
+                  (bData['Fullname']?.toString() ?? '').toLowerCase(),
+                ),
+          };
+        });
+
+        final totalClasses = docs.fold<int>(
+          0,
+          (sum, doc) =>
+              sum + ((doc.data()['SumClass'] as num?)?.toInt() ?? 0),
+        );
+
+        Map<String, dynamic>? topLecturer;
+        for (final doc in docs) {
+          final data = doc.data();
+          final classes = (data['SumClass'] as num?)?.toInt() ?? 0;
+          final top = (topLecturer?['SumClass'] as num?)?.toInt() ?? -1;
+          if (classes > top) topLecturer = data;
+        }
+
+        final topName = topLecturer?['Fullname']?.toString() ?? '-';
+
+        return LayoutBuilder(
+          builder: (context, box) {
+            final desktop = box.maxWidth >= 900;
+
+            return Scaffold(
+              appBar: desktop
+                  ? null
+                  : AppBar(
+                      title: const Text(
+                        'Quản lý giảng viên',
+                        style: TextStyle(fontWeight: FontWeight.w700),
                       ),
+                      actions: [
+                        IconButton(
+                          tooltip: 'Đăng xuất',
+                          onPressed: confirmLogout,
+                          icon: const Icon(Icons.logout_rounded),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 14),
-                    _StatsRow(
-                      lecturerCount: docs.length,
+              body: Row(
+                children: [
+                  if (desktop)
+                    _Sidebar(
+                      onAdd: addGiangVien,
+                      onExport: () => exportDatabase(docs),
+                      onLogout: confirmLogout,
+                    ),
+                  Expanded(
+                    child: _Workspace(
+                      desktop: desktop,
+                      docs: filtered,
+                      totalLecturers: docs.length,
                       totalClasses: totalClasses,
-                      topLecturer:
-                          topLecturer?['Fullname']?.toString() ?? '-',
-                    ),
-                    const SizedBox(height: 16),
-                    _Toolbar(
+                      topLecturer: topName,
                       searchController: searchController,
                       searchFocus: searchFocus,
                       keyword: keyword,
+                      classFilter: classFilter,
+                      sortBy: sortBy,
+                      decodeImage: decodeImage,
                       onSearchChanged: (value) =>
                           setState(() => keyword = value),
                       onClear: () {
@@ -351,30 +341,379 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                         setState(() => keyword = '');
                         searchFocus.requestFocus();
                       },
-                      onExport: () => exportDatabase(docs),
-                      onAdd: addGiangVien,
-                    ),
-                    const SizedBox(height: 10),
-                    _FilterRow(
-                      selectedFilter: classFilter,
-                      sortBy: sortBy,
                       onFilterChanged: (value) =>
                           setState(() => classFilter = value),
                       onSortChanged: (value) =>
                           setState(() => sortBy = value),
+                      onAdd: addGiangVien,
+                      onExport: () => exportDatabase(docs),
+                      onOpen: showDetail,
                     ),
-                    const SizedBox(height: 12),
-                    Expanded(
-                      child: _LecturerList(
-                        docs: filtered,
-                        decodeImage: decodeImage,
-                        onOpen: showDetail,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _Sidebar extends StatelessWidget {
+  final VoidCallback onAdd;
+  final VoidCallback onExport;
+  final VoidCallback onLogout;
+
+  const _Sidebar({
+    required this.onAdd,
+    required this.onExport,
+    required this.onLogout,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+
+    return Container(
+      width: 224,
+      color: const Color(0xFF0F172A),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(14, 22, 14, 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.school_rounded,
+                      color: Colors.white,
+                      size: 27,
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'QLHocPhan',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
+              const SizedBox(height: 28),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'QUẢN LÝ',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const ListTile(
+                  dense: true,
+                  leading: Icon(
+                    Icons.people_alt_outlined,
+                    color: Colors.white,
+                  ),
+                  title: Text(
+                    'Giảng viên',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                child: Text(
+                  'THAO TÁC NHANH',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.1,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 6),
+              _SideAction(
+                icon: Icons.person_add_alt_1_outlined,
+                label: 'Thêm giảng viên',
+                onTap: onAdd,
+              ),
+              if (kIsWeb)
+                _SideAction(
+                  icon: Icons.download_outlined,
+                  label: 'Xuất dữ liệu',
+                  onTap: onExport,
+                ),
+              const Spacer(),
+              const Divider(color: Color(0xFF334155)),
+              _SideAction(
+                icon: Icons.logout_rounded,
+                label: 'Đăng xuất',
+                onTap: onLogout,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SideAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _SideAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      dense: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+      ),
+      leading: Icon(icon, color: const Color(0xFFCBD5E1), size: 20),
+      title: Text(
+        label,
+        style: const TextStyle(
+          color: Color(0xFFE2E8F0),
+          fontSize: 14,
+        ),
+      ),
+      onTap: onTap,
+    );
+  }
+}
+
+class _Workspace extends StatelessWidget {
+  final bool desktop;
+  final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs;
+  final int totalLecturers;
+  final int totalClasses;
+  final String topLecturer;
+  final TextEditingController searchController;
+  final FocusNode searchFocus;
+  final String keyword;
+  final String classFilter;
+  final String sortBy;
+  final Uint8List? Function(dynamic) decodeImage;
+  final ValueChanged<String> onSearchChanged;
+  final VoidCallback onClear;
+  final ValueChanged<String> onFilterChanged;
+  final ValueChanged<String> onSortChanged;
+  final VoidCallback onAdd;
+  final VoidCallback onExport;
+  final Future<void> Function(String, Map<String, dynamic>) onOpen;
+
+  const _Workspace({
+    required this.desktop,
+    required this.docs,
+    required this.totalLecturers,
+    required this.totalClasses,
+    required this.topLecturer,
+    required this.searchController,
+    required this.searchFocus,
+    required this.keyword,
+    required this.classFilter,
+    required this.sortBy,
+    required this.decodeImage,
+    required this.onSearchChanged,
+    required this.onClear,
+    required this.onFilterChanged,
+    required this.onSortChanged,
+    required this.onAdd,
+    required this.onExport,
+    required this.onOpen,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1180),
+        child: Padding(
+          padding: EdgeInsets.all(desktop ? 28 : 14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _PageHeader(
+                desktop: desktop,
+                onAdd: onAdd,
+                onExport: onExport,
+              ),
+              const SizedBox(height: 18),
+              _SummaryBar(
+                totalLecturers: totalLecturers,
+                totalClasses: totalClasses,
+                topLecturer: topLecturer,
+              ),
+              const SizedBox(height: 18),
+              _SearchAndFilter(
+                searchController: searchController,
+                searchFocus: searchFocus,
+                keyword: keyword,
+                classFilter: classFilter,
+                sortBy: sortBy,
+                onSearchChanged: onSearchChanged,
+                onClear: onClear,
+                onFilterChanged: onFilterChanged,
+                onSortChanged: onSortChanged,
+              ),
+              const SizedBox(height: 12),
+              Expanded(
+                child: _LecturerTable(
+                  docs: docs,
+                  decodeImage: decodeImage,
+                  onOpen: onOpen,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PageHeader extends StatelessWidget {
+  final bool desktop;
+  final VoidCallback onAdd;
+  final VoidCallback onExport;
+
+  const _PageHeader({
+    required this.desktop,
+    required this.onAdd,
+    required this.onExport,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Giảng viên',
+                style: TextStyle(
+                  fontSize: 27,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              SizedBox(height: 3),
+              Text(
+                'Quản lý danh sách và số lớp phụ trách.',
+                style: TextStyle(color: Color(0xFF64748B)),
+              ),
+            ],
+          ),
+        ),
+        if (!desktop && kIsWeb)
+          IconButton(
+            tooltip: 'Xuất JSON',
+            onPressed: onExport,
+            icon: const Icon(Icons.download_outlined),
+          ),
+        FilledButton.icon(
+          onPressed: onAdd,
+          icon: const Icon(Icons.add, size: 19),
+          label: const Text('Thêm giảng viên'),
+        ),
+      ],
+    );
+  }
+}
+
+class _SummaryBar extends StatelessWidget {
+  final int totalLecturers;
+  final int totalClasses;
+  final String topLecturer;
+
+  const _SummaryBar({
+    required this.totalLecturers,
+    required this.totalClasses,
+    required this.topLecturer,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: LayoutBuilder(
+        builder: (context, box) {
+          final compact = box.maxWidth < 680;
+
+          if (compact) {
+            return Column(
+              children: [
+                _SummaryItem(
+                  label: 'Tổng giảng viên',
+                  value: '$totalLecturers',
+                ),
+                const Divider(height: 1),
+                _SummaryItem(
+                  label: 'Tổng số lớp',
+                  value: '$totalClasses',
+                ),
+                const Divider(height: 1),
+                _SummaryItem(
+                  label: 'Phụ trách nhiều lớp nhất',
+                  value: topLecturer,
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(
+                child: _SummaryItem(
+                  label: 'Tổng giảng viên',
+                  value: '$totalLecturers',
+                ),
+              ),
+              const SizedBox(height: 62, child: VerticalDivider(width: 1)),
+              Expanded(
+                child: _SummaryItem(
+                  label: 'Tổng số lớp',
+                  value: '$totalClasses',
+                ),
+              ),
+              const SizedBox(height: 62, child: VerticalDivider(width: 1)),
+              Expanded(
+                flex: 2,
+                child: _SummaryItem(
+                  label: 'Phụ trách nhiều lớp nhất',
+                  value: topLecturer,
+                ),
+              ),
+            ],
           );
         },
       ),
@@ -382,152 +721,83 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  final int lecturerCount;
-  final int totalClasses;
-  final String topLecturer;
-
-  const _StatsRow({
-    required this.lecturerCount,
-    required this.totalClasses,
-    required this.topLecturer,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, box) {
-        final compact = box.maxWidth < 700;
-
-        final items = [
-          _StatBox(
-            label: 'Giảng viên',
-            value: lecturerCount.toString(),
-            icon: Icons.people_outline,
-          ),
-          _StatBox(
-            label: 'Tổng số lớp',
-            value: totalClasses.toString(),
-            icon: Icons.class_outlined,
-          ),
-          _StatBox(
-            label: 'Nhiều lớp nhất',
-            value: topLecturer,
-            icon: Icons.star_border_rounded,
-            small: true,
-          ),
-        ];
-
-        if (compact) {
-          return Column(
-            children: [
-              for (var i = 0; i < items.length; i++) ...[
-                SizedBox(width: double.infinity, child: items[i]),
-                if (i < items.length - 1) const SizedBox(height: 8),
-              ],
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            for (var i = 0; i < items.length; i++) ...[
-              Expanded(child: items[i]),
-              if (i < items.length - 1) const SizedBox(width: 10),
-            ],
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _StatBox extends StatelessWidget {
+class _SummaryItem extends StatelessWidget {
   final String label;
   final String value;
-  final IconData icon;
-  final bool small;
 
-  const _StatBox({
+  const _SummaryItem({
     required this.label,
     required this.value,
-    required this.icon,
-    this.small = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          children: [
-            Icon(icon, color: primary),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 13,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    value,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: small ? 16 : 22,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 18,
+        vertical: 15,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 19,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _Toolbar extends StatelessWidget {
+class _SearchAndFilter extends StatelessWidget {
   final TextEditingController searchController;
   final FocusNode searchFocus;
   final String keyword;
+  final String classFilter;
+  final String sortBy;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onClear;
-  final VoidCallback onExport;
-  final VoidCallback onAdd;
+  final ValueChanged<String> onFilterChanged;
+  final ValueChanged<String> onSortChanged;
 
-  const _Toolbar({
+  const _SearchAndFilter({
     required this.searchController,
     required this.searchFocus,
     required this.keyword,
+    required this.classFilter,
+    required this.sortBy,
     required this.onSearchChanged,
     required this.onClear,
-    required this.onExport,
-    required this.onAdd,
+    required this.onFilterChanged,
+    required this.onSortChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, box) {
-        final compact = box.maxWidth < 650;
+        final compact = box.maxWidth < 760;
 
         final search = TextField(
           controller: searchController,
           focusNode: searchFocus,
           onChanged: onSearchChanged,
           decoration: InputDecoration(
-            hintText: 'Tìm mã hoặc tên giảng viên',
+            hintText: 'Tìm theo mã hoặc tên giảng viên',
             prefixIcon: const Icon(Icons.search),
             suffixIcon: keyword.isEmpty
                 ? null
@@ -538,104 +808,38 @@ class _Toolbar extends StatelessWidget {
           ),
         );
 
-        final export = OutlinedButton.icon(
-          onPressed: onExport,
-          icon: const Icon(Icons.download_outlined),
-          label: const Text('Xuất JSON'),
-        );
-
-        final add = FilledButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add),
-          label: const Text('Thêm'),
-        );
-
-        if (compact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              search,
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  if (kIsWeb) ...[
-                    Expanded(child: export),
-                    const SizedBox(width: 8),
-                  ],
-                  Expanded(child: add),
-                ],
-              ),
-            ],
-          );
-        }
-
-        return Row(
+        final filters = Wrap(
+          spacing: 6,
+          runSpacing: 6,
           children: [
-            Expanded(child: search),
-            if (kIsWeb) ...[
-              const SizedBox(width: 8),
-              export,
-            ],
-            const SizedBox(width: 8),
-            add,
+            _FilterChip(
+              label: 'Tất cả',
+              value: 'all',
+              selected: classFilter,
+              onChanged: onFilterChanged,
+            ),
+            _FilterChip(
+              label: '0 lớp',
+              value: 'zero',
+              selected: classFilter,
+              onChanged: onFilterChanged,
+            ),
+            _FilterChip(
+              label: '1–3 lớp',
+              value: '1to3',
+              selected: classFilter,
+              onChanged: onFilterChanged,
+            ),
+            _FilterChip(
+              label: '≥ 4 lớp',
+              value: '4plus',
+              selected: classFilter,
+              onChanged: onFilterChanged,
+            ),
           ],
         );
-      },
-    );
-  }
-}
 
-class _FilterRow extends StatelessWidget {
-  final String selectedFilter;
-  final String sortBy;
-  final ValueChanged<String> onFilterChanged;
-  final ValueChanged<String> onSortChanged;
-
-  const _FilterRow({
-    required this.selectedFilter,
-    required this.sortBy,
-    required this.onFilterChanged,
-    required this.onSortChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              _FilterChip(
-                label: 'Tất cả',
-                value: 'all',
-                selected: selectedFilter,
-                onChanged: onFilterChanged,
-              ),
-              _FilterChip(
-                label: '0 lớp',
-                value: 'zero',
-                selected: selectedFilter,
-                onChanged: onFilterChanged,
-              ),
-              _FilterChip(
-                label: '1–3 lớp',
-                value: '1to3',
-                selected: selectedFilter,
-                onChanged: onFilterChanged,
-              ),
-              _FilterChip(
-                label: '≥ 4 lớp',
-                value: '4plus',
-                selected: selectedFilter,
-                onChanged: onFilterChanged,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 8),
-        PopupMenuButton<String>(
+        final sort = PopupMenuButton<String>(
           tooltip: 'Sắp xếp',
           initialValue: sortBy,
           onSelected: onSortChanged,
@@ -650,19 +854,72 @@ class _FilterRow extends StatelessWidget {
               child: Text('Số lớp thấp → cao'),
             ),
           ],
-          child: const Padding(
-            padding: EdgeInsets.all(8),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.sort, size: 18),
-                SizedBox(width: 5),
-                Text('Sắp xếp'),
-              ],
-            ),
+          child: const OutlinedButtonVisual(
+            icon: Icons.sort,
+            text: 'Sắp xếp',
           ),
-        ),
-      ],
+        );
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              search,
+              const SizedBox(height: 8),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: filters),
+                  const SizedBox(width: 8),
+                  sort,
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(flex: 5, child: search),
+            const SizedBox(width: 10),
+            Expanded(flex: 5, child: filters),
+            const SizedBox(width: 8),
+            sort,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class OutlinedButtonVisual extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const OutlinedButtonVisual({
+    super.key,
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 42,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFDDE2E8)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 18),
+          const SizedBox(width: 6),
+          Text(text),
+        ],
+      ),
     );
   }
 }
@@ -686,17 +943,18 @@ class _FilterChip extends StatelessWidget {
       label: Text(label),
       selected: selected == value,
       showCheckmark: false,
+      visualDensity: VisualDensity.compact,
       onSelected: (_) => onChanged(value),
     );
   }
 }
 
-class _LecturerList extends StatelessWidget {
+class _LecturerTable extends StatelessWidget {
   final List<QueryDocumentSnapshot<Map<String, dynamic>>> docs;
   final Uint8List? Function(dynamic) decodeImage;
   final Future<void> Function(String, Map<String, dynamic>) onOpen;
 
-  const _LecturerList({
+  const _LecturerTable({
     required this.docs,
     required this.decodeImage,
     required this.onOpen,
@@ -704,86 +962,130 @@ class _LecturerList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            color: const Color(0xFFF8F9FA),
-            child: const Row(
-              children: [
-                Expanded(
-                  flex: 4,
-                  child: Text(
-                    'Giảng viên',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    'Mã GV',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                SizedBox(
-                  width: 90,
-                  child: Text(
-                    'Số lớp',
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                SizedBox(width: 32),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          Expanded(
-            child: docs.isEmpty
-                ? const Center(child: Text('Không có dữ liệu'))
-                : ListView.separated(
-                    itemCount: docs.length,
-                    separatorBuilder: (_, __) => const Divider(height: 1),
-                    itemBuilder: (context, index) {
-                      final document = docs[index];
-                      final data = document.data();
-                      final imageBytes = decodeImage(data['Image']);
+    return LayoutBuilder(
+      builder: (context, box) {
+        final mobile = box.maxWidth < 650;
 
-                      return InkWell(
-                        onTap: () => onOpen(document.id, data),
+        if (docs.isEmpty) {
+          return const Card(
+            child: Center(
+              child: Text('Không có dữ liệu phù hợp'),
+            ),
+          );
+        }
+
+        if (mobile) {
+          return Card(
+            child: ListView.separated(
+              itemCount: docs.length,
+              separatorBuilder: (_, __) => const Divider(height: 1),
+              itemBuilder: (context, index) {
+                final document = docs[index];
+                final data = document.data();
+                final imageBytes = decodeImage(data['Image']);
+
+                return ListTile(
+                  onTap: () => onOpen(document.id, data),
+                  leading: CircleAvatar(
+                    backgroundImage:
+                        imageBytes != null ? MemoryImage(imageBytes) : null,
+                    child: imageBytes == null
+                        ? const Icon(Icons.person_outline)
+                        : null,
+                  ),
+                  title: Text(data['Fullname']?.toString() ?? ''),
+                  subtitle: Text('Mã GV: ${data['IDGV'] ?? ''}'),
+                  trailing: Text(
+                    '${data['SumClass'] ?? 0} lớp',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                );
+              },
+            ),
+          );
+        }
+
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            children: [
+              Container(
+                height: 46,
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+                color: const Color(0xFFF8FAFC),
+                child: const Row(
+                  children: [
+                    SizedBox(width: 50),
+                    Expanded(
+                      flex: 4,
+                      child: Text(
+                        'Họ và tên',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Mã giảng viên',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 2,
+                      child: Text(
+                        'Số lớp',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    SizedBox(width: 36),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: docs.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (context, index) {
+                    final document = docs[index];
+                    final data = document.data();
+                    final imageBytes = decodeImage(data['Image']);
+
+                    return InkWell(
+                      onTap: () => onOpen(document.id, data),
+                      child: SizedBox(
+                        height: 62,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 10,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 18),
                           child: Row(
                             children: [
+                              SizedBox(
+                                width: 50,
+                                child: Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: CircleAvatar(
+                                    radius: 19,
+                                    backgroundImage: imageBytes != null
+                                        ? MemoryImage(imageBytes)
+                                        : null,
+                                    child: imageBytes == null
+                                        ? const Icon(
+                                            Icons.person_outline,
+                                            size: 19,
+                                          )
+                                        : null,
+                                  ),
+                                ),
+                              ),
                               Expanded(
                                 flex: 4,
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 21,
-                                      backgroundImage: imageBytes != null
-                                          ? MemoryImage(imageBytes)
-                                          : null,
-                                      child: imageBytes == null
-                                          ? const Icon(Icons.person_outline)
-                                          : null,
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Expanded(
-                                      child: Text(
-                                        data['Fullname']?.toString() ?? '',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
+                                child: Text(
+                                  data['Fullname']?.toString() ?? '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                  ),
                                 ),
                               ),
                               Expanded(
@@ -792,28 +1094,31 @@ class _LecturerList extends StatelessWidget {
                                   data['IDGV']?.toString() ?? '',
                                 ),
                               ),
-                              SizedBox(
-                                width: 90,
+                              Expanded(
+                                flex: 2,
                                 child: Text(
                                   data['SumClass']?.toString() ?? '0',
                                 ),
                               ),
                               const SizedBox(
-                                width: 32,
+                                width: 36,
                                 child: Icon(
                                   Icons.chevron_right,
-                                  color: Colors.grey,
+                                  color: Color(0xFF94A3B8),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      );
-                    },
-                  ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
