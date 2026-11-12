@@ -22,6 +22,21 @@ class GiangVienService {
     return giangVien.snapshots();
   }
 
+  Future<bool> idExists(
+    String idgv, {
+    String? excludeDocumentId,
+  }) async {
+    final snapshot = await giangVien.get();
+    final target = idgv.trim().toLowerCase();
+
+    return snapshot.docs.any((doc) {
+      if (doc.id == excludeDocumentId) return false;
+      final current =
+          doc.data()['IDGV']?.toString().trim().toLowerCase() ?? '';
+      return current == target;
+    });
+  }
+
   Future<void> updateGiangVien({
     required String documentId,
     required String idgv,
