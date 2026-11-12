@@ -64,321 +64,127 @@ class _LoginScreenState extends State<LoginScreen> {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF1F3FF),
-              Color(0xFFF8F9FD),
-              Color(0xFFF4F7FB),
-            ],
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980),
-              child: LayoutBuilder(
-                builder: (context, box) {
-                  final wide = box.maxWidth >= 760;
-
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: const Color(0xFFE7E9F2)),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x120F172A),
-                          blurRadius: 36,
-                          offset: Offset(0, 18),
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: SizedBox(
+            width: 400,
+            child: Card(
+              child: Padding(
+                padding: const EdgeInsets.all(28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: colors.primary,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: const Icon(
+                            Icons.school_rounded,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'QL Học phần',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              'Hệ thống quản trị',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: wide
-                        ? Row(
-                            children: [
-                              const Expanded(child: _BrandPanel()),
-                              Expanded(child: _LoginForm(
-                                colors: colors,
-                                emailController: emailController,
-                                passwordController: passwordController,
-                                hidePassword: hidePassword,
-                                isLoading: isLoading,
-                                errorMessage: errorMessage,
-                                onTogglePassword: () => setState(
-                                  () => hidePassword = !hidePassword,
-                                ),
-                                onLogin: login,
-                              )),
-                            ],
-                          )
-                        : _LoginForm(
-                            colors: colors,
-                            emailController: emailController,
-                            passwordController: passwordController,
-                            hidePassword: hidePassword,
-                            isLoading: isLoading,
-                            errorMessage: errorMessage,
-                            onTogglePassword: () => setState(
-                              () => hidePassword = !hidePassword,
-                            ),
-                            onLogin: login,
-                            mobile: true,
+                    const SizedBox(height: 30),
+                    const Text(
+                      'Đăng nhập',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Sử dụng tài khoản quản trị viên để tiếp tục.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: Icon(Icons.email_outlined),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: passwordController,
+                      obscureText: hidePassword,
+                      onSubmitted: (_) {
+                        if (!isLoading) login();
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Mật khẩu',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        suffixIcon: IconButton(
+                          onPressed: () => setState(
+                            () => hidePassword = !hidePassword,
                           ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BrandPanel extends StatelessWidget {
-  const _BrandPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minHeight: 560),
-      padding: const EdgeInsets.all(46),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF4F46E5), Color(0xFF6D5FEA)],
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          _BrandBadge(),
-          SizedBox(height: 34),
-          Text(
-            'Quản lý học phần\nthông minh hơn.',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 38,
-              height: 1.18,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          SizedBox(height: 16),
-          Text(
-            'Theo dõi giảng viên, số lớp và dữ liệu học phần trong một giao diện trực quan.',
-            style: TextStyle(
-              color: Color(0xFFDDE1FF),
-              fontSize: 16,
-              height: 1.6,
-            ),
-          ),
-          SizedBox(height: 30),
-          _Feature(icon: Icons.bolt_rounded, text: 'Dữ liệu realtime với Firebase'),
-          SizedBox(height: 12),
-          _Feature(icon: Icons.tune_rounded, text: 'Tìm kiếm, lọc và sắp xếp nhanh'),
-          SizedBox(height: 12),
-          _Feature(icon: Icons.cloud_download_outlined, text: 'Xuất dữ liệu JSON tiện lợi'),
-        ],
-      ),
-    );
-  }
-}
-
-class _BrandBadge extends StatelessWidget {
-  const _BrandBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.school_rounded, color: Colors.white, size: 20),
-          SizedBox(width: 8),
-          Text(
-            'QL HỌC PHẦN',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.8,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Feature extends StatelessWidget {
-  final IconData icon;
-  final String text;
-
-  const _Feature({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white, size: 20),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(text, style: const TextStyle(color: Colors.white)),
-        ),
-      ],
-    );
-  }
-}
-
-class _LoginForm extends StatelessWidget {
-  final ColorScheme colors;
-  final TextEditingController emailController;
-  final TextEditingController passwordController;
-  final bool hidePassword;
-  final bool isLoading;
-  final String? errorMessage;
-  final VoidCallback onTogglePassword;
-  final VoidCallback onLogin;
-  final bool mobile;
-
-  const _LoginForm({
-    required this.colors,
-    required this.emailController,
-    required this.passwordController,
-    required this.hidePassword,
-    required this.isLoading,
-    required this.errorMessage,
-    required this.onTogglePassword,
-    required this.onLogin,
-    this.mobile = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.all(mobile ? 28 : 46),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (mobile) ...[
-            const _BrandBadgeMobile(),
-            const SizedBox(height: 28),
-          ],
-          const Text(
-            'Chào mừng trở lại',
-            style: TextStyle(fontSize: 30, fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Đăng nhập để tiếp tục quản lý hệ thống.',
-            style: TextStyle(color: Color(0xFF74798B), fontSize: 15),
-          ),
-          const SizedBox(height: 30),
-          TextField(
-            controller: emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'Email quản trị',
-              prefixIcon: Icon(Icons.alternate_email_rounded),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: passwordController,
-            obscureText: hidePassword,
-            onSubmitted: (_) {
-              if (!isLoading) onLogin();
-            },
-            decoration: InputDecoration(
-              labelText: 'Mật khẩu',
-              prefixIcon: const Icon(Icons.lock_outline_rounded),
-              suffixIcon: IconButton(
-                onPressed: onTogglePassword,
-                icon: Icon(
-                  hidePassword
-                      ? Icons.visibility_outlined
-                      : Icons.visibility_off_outlined,
+                          icon: Icon(
+                            hidePassword
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                          ),
+                        ),
+                      ),
+                    ),
+                    if (errorMessage != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorMessage!,
+                        style: TextStyle(color: colors.error),
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: isLoading ? null : login,
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Text('Đăng nhập'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
-          if (errorMessage != null) ...[
-            const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colors.errorContainer,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                errorMessage!,
-                style: TextStyle(color: colors.onErrorContainer),
-              ),
-            ),
-          ],
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: isLoading ? null : onLogin,
-              icon: isLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.arrow_forward_rounded),
-              label: Text(isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'),
-            ),
-          ),
-          const SizedBox(height: 18),
-          const Center(
-            child: Text(
-              'Firebase Authentication • Secure Admin Access',
-              style: TextStyle(
-                color: Color(0xFF9A9FB2),
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
-}
-
-class _BrandBadgeMobile extends StatelessWidget {
-  const _BrandBadgeMobile();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        CircleAvatar(
-          backgroundColor: Color(0xFFE9E9FF),
-          child: Icon(Icons.school_rounded, color: Color(0xFF5B5BD6)),
-        ),
-        SizedBox(width: 10),
-        Text(
-          'QL Học phần',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-        ),
-      ],
     );
   }
 }
