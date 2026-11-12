@@ -27,23 +27,19 @@ class GiangVienForm extends StatefulWidget {
 class _GiangVienFormState extends State<GiangVienForm> {
   late final TextEditingController idgvController;
   late final TextEditingController fullnameController;
-  late final TextEditingController sumClassController;
 
   Uint8List? imageBytes;
   String imageBase64 = '';
   String? errorMessage;
+  int sumClass = 0;
 
   @override
   void initState() {
     super.initState();
-
     idgvController = TextEditingController(text: widget.idgv ?? '');
     fullnameController = TextEditingController(text: widget.fullname ?? '');
-    sumClassController = TextEditingController(
-      text: widget.sumClass?.toString() ?? '',
-    );
-
     imageBase64 = widget.image ?? '';
+    sumClass = widget.sumClass ?? 0;
 
     if (imageBase64.isNotEmpty) {
       try {
@@ -64,7 +60,6 @@ class _GiangVienFormState extends State<GiangVienForm> {
     if (image == null) return;
 
     final bytes = await image.readAsBytes();
-
     setState(() {
       imageBytes = bytes;
       imageBase64 = base64Encode(bytes);
@@ -74,18 +69,10 @@ class _GiangVienFormState extends State<GiangVienForm> {
   void submit() {
     final idgv = idgvController.text.trim();
     final fullname = fullnameController.text.trim();
-    final sumClass = int.tryParse(sumClassController.text.trim());
 
-    if (idgv.isEmpty || fullname.isEmpty || sumClass == null) {
+    if (idgv.isEmpty || fullname.isEmpty) {
       setState(() {
         errorMessage = 'Vui lòng nhập đầy đủ thông tin';
-      });
-      return;
-    }
-
-    if (sumClass < 0) {
-      setState(() {
-        errorMessage = 'Số lớp không hợp lệ';
       });
       return;
     }
@@ -102,16 +89,13 @@ class _GiangVienFormState extends State<GiangVienForm> {
   void dispose() {
     idgvController.dispose();
     fullnameController.dispose();
-    sumClassController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(
-        widget.isEdit ? 'Sửa giảng viên' : 'Thêm giảng viên',
-      ),
+      title: Text(widget.isEdit ? 'Sửa giảng viên' : 'Thêm giảng viên'),
       content: SizedBox(
         width: 420,
         child: SingleChildScrollView(
@@ -151,12 +135,34 @@ class _GiangVienFormState extends State<GiangVienForm> {
                 ),
               ),
               const SizedBox(height: 12),
-              TextField(
-                controller: sumClassController,
-                keyboardType: TextInputType.number,
+              InputDecorator(
                 decoration: const InputDecoration(
                   labelText: 'SumClass',
                   prefixIcon: Icon(Icons.class_outlined),
+                ),
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: sumClass > 0
+                          ? () => setState(() => sumClass--)
+                          : null,
+                      icon: const Icon(Icons.remove_circle_outline),
+                    ),
+                    Expanded(
+                      child: Text(
+                        '$sumClass',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => setState(() => sumClass++),
+                      icon: const Icon(Icons.add_circle_outline),
+                    ),
+                  ],
                 ),
               ),
               if (errorMessage != null) ...[
