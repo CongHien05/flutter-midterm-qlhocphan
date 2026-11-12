@@ -313,6 +313,13 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                         ),
                       ],
                     ),
+              floatingActionButton: desktop
+                  ? null
+                  : FloatingActionButton.extended(
+                      onPressed: addGiangVien,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Thêm'),
+                    ),
               body: Row(
                 children: [
                   if (desktop)
@@ -558,22 +565,24 @@ class _Workspace extends StatelessWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 1180),
         child: Padding(
-          padding: EdgeInsets.all(desktop ? 28 : 14),
+          padding: EdgeInsets.all(desktop ? 28 : 10),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _PageHeader(
-                desktop: desktop,
-                onAdd: onAdd,
-                onExport: onExport,
-              ),
-              const SizedBox(height: 18),
+              if (desktop) ...[
+                _PageHeader(
+                  desktop: desktop,
+                  onAdd: onAdd,
+                  onExport: onExport,
+                ),
+                const SizedBox(height: 18),
+              ],
               _SummaryBar(
                 totalLecturers: totalLecturers,
                 totalClasses: totalClasses,
                 topLecturer: topLecturer,
               ),
-              const SizedBox(height: 18),
+              SizedBox(height: desktop ? 18 : 10),
               _SearchAndFilter(
                 searchController: searchController,
                 searchFocus: searchFocus,
@@ -585,7 +594,7 @@ class _Workspace extends StatelessWidget {
                 onFilterChanged: onFilterChanged,
                 onSortChanged: onSortChanged,
               ),
-              const SizedBox(height: 12),
+              SizedBox(height: desktop ? 12 : 8),
               Expanded(
                 child: _LecturerTable(
                   docs: docs,
@@ -670,23 +679,33 @@ class _SummaryBar extends StatelessWidget {
           final compact = box.maxWidth < 680;
 
           if (compact) {
-            return Column(
-              children: [
-                _SummaryItem(
-                  label: 'Tổng giảng viên',
-                  value: '$totalLecturers',
-                ),
-                const Divider(height: 1),
-                _SummaryItem(
-                  label: 'Tổng số lớp',
-                  value: '$totalClasses',
-                ),
-                const Divider(height: 1),
-                _SummaryItem(
-                  label: 'Phụ trách nhiều lớp nhất',
-                  value: topLecturer,
-                ),
-              ],
+            return SizedBox(
+              height: 70,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _CompactSummaryItem(
+                      label: 'Giảng viên',
+                      value: '$totalLecturers',
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: _CompactSummaryItem(
+                      label: 'Số lớp',
+                      value: '$totalClasses',
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  Expanded(
+                    child: _CompactSummaryItem(
+                      label: 'Nhiều nhất',
+                      value: topLecturer,
+                      small: true,
+                    ),
+                  ),
+                ],
+              ),
             );
           }
 
@@ -716,6 +735,50 @@ class _SummaryBar extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _CompactSummaryItem extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool small;
+
+  const _CompactSummaryItem({
+    required this.label,
+    required this.value,
+    this.small = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: small ? 13 : 19,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -865,12 +928,16 @@ class _SearchAndFilter extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: filters),
-                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: filters,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
                   sort,
                 ],
               ),
