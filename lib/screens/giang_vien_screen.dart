@@ -112,7 +112,6 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
         ],
       ),
     );
-
     if (confirm != true) return;
 
     try {
@@ -133,7 +132,6 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
     );
 
     if (!mounted) return;
-
     if (action == 'edit') {
       await editGiangVien(documentId, data);
     } else if (action == 'delete') {
@@ -150,9 +148,16 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Quản lý giảng viên',
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.school_rounded),
+            SizedBox(width: 10),
+            Text(
+              'QL Học phần',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+          ],
         ),
         actions: [
           IconButton(
@@ -160,6 +165,7 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
             onPressed: authService.logout,
             icon: const Icon(Icons.logout_rounded),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -189,12 +195,26 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
           return Align(
             alignment: Alignment.topCenter,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 920),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                    child: Row(
+              constraints: const BoxConstraints(maxWidth: 980),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Tổng quan giảng viên',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Theo dõi thông tin giảng viên và số lớp đang phụ trách.',
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
                       children: [
                         Expanded(
                           child: _StatCard(
@@ -203,7 +223,7 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                             value: docs.length.toString(),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: _StatCard(
                             icon: Icons.class_outlined,
@@ -213,104 +233,133 @@ class _GiangVienScreenState extends State<GiangVienScreen> {
                         ),
                       ],
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: searchController,
+                            focusNode: searchFocus,
+                            onChanged: (value) {
+                              setState(() => keyword = value);
+                            },
+                            decoration: InputDecoration(
+                              hintText: 'Tìm theo mã hoặc tên giảng viên',
+                              prefixIcon:
+                                  const Icon(Icons.search_rounded),
+                              suffixIcon: keyword.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      tooltip: 'Xóa tìm kiếm',
+                                      onPressed: () {
+                                        searchController.clear();
+                                        setState(() => keyword = '');
+                                        searchFocus.requestFocus();
+                                      },
+                                      icon:
+                                          const Icon(Icons.close_rounded),
+                                    ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        FilledButton.icon(
+                          onPressed: addGiangVien,
+                          icon: const Icon(Icons.add_rounded),
+                          label: const Text('Thêm giảng viên'),
+                        ),
+                      ],
                     ),
-                    child: TextField(
-                      controller: searchController,
-                      focusNode: searchFocus,
-                      onChanged: (value) {
-                        setState(() => keyword = value);
-                      },
-                      decoration: InputDecoration(
-                        hintText: 'Tìm theo mã hoặc tên giảng viên',
-                        prefixIcon: const Icon(Icons.search_rounded),
-                        suffixIcon: keyword.isEmpty
-                            ? null
-                            : IconButton(
-                                tooltip: 'Xóa tìm kiếm',
-                                onPressed: () {
-                                  searchController.clear();
-                                  setState(() => keyword = '');
-                                  searchFocus.requestFocus();
+                    const SizedBox(height: 14),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0xFFE8EBF2),
+                          ),
+                        ),
+                        child: filtered.isEmpty
+                            ? Center(
+                                child: Text(
+                                  docs.isEmpty
+                                      ? 'Chưa có giảng viên.'
+                                      : 'Không tìm thấy giảng viên phù hợp.',
+                                ),
+                              )
+                            : ListView.separated(
+                                padding: const EdgeInsets.all(10),
+                                itemCount: filtered.length,
+                                separatorBuilder: (_, __) =>
+                                    const Divider(height: 1),
+                                itemBuilder: (context, index) {
+                                  final document = filtered[index];
+                                  final data = document.data();
+                                  final imageBytes =
+                                      decodeImage(data['Image']);
+
+                                  return ListTile(
+                                    onTap: () =>
+                                        showDetail(document.id, data),
+                                    contentPadding:
+                                        const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 8,
+                                    ),
+                                    leading: CircleAvatar(
+                                      radius: 28,
+                                      backgroundColor:
+                                          colors.primaryContainer,
+                                      backgroundImage: imageBytes != null
+                                          ? MemoryImage(imageBytes)
+                                          : null,
+                                      child: imageBytes == null
+                                          ? Icon(
+                                              Icons.person_rounded,
+                                              color: colors.primary,
+                                            )
+                                          : null,
+                                    ),
+                                    title: Text(
+                                      data['Fullname']?.toString() ?? '',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    subtitle: Padding(
+                                      padding:
+                                          const EdgeInsets.only(top: 4),
+                                      child: Text(
+                                        'IDGV: ${data['IDGV'] ?? ''}   •   '
+                                        '${data['SumClass'] ?? 0} lớp',
+                                      ),
+                                    ),
+                                    trailing: Container(
+                                      width: 38,
+                                      height: 38,
+                                      decoration: BoxDecoration(
+                                        color: colors.primaryContainer,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.chevron_right_rounded,
+                                        color: colors.primary,
+                                      ),
+                                    ),
+                                  );
                                 },
-                                icon: const Icon(Icons.close_rounded),
                               ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Expanded(
-                    child: filtered.isEmpty
-                        ? Center(
-                            child: Text(
-                              docs.isEmpty
-                                  ? 'Chưa có giảng viên. Nhấn + để thêm.'
-                                  : 'Không tìm thấy giảng viên phù hợp.',
-                            ),
-                          )
-                        : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(12, 8, 12, 90),
-                            itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final document = filtered[index];
-                              final data = document.data();
-                              final imageBytes = decodeImage(data['Image']);
-
-                              return Card(
-                                clipBehavior: Clip.antiAlias,
-                                child: ListTile(
-                                  onTap: () =>
-                                      showDetail(document.id, data),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                  leading: CircleAvatar(
-                                    radius: 28,
-                                    backgroundColor: colors.primaryContainer,
-                                    backgroundImage: imageBytes != null
-                                        ? MemoryImage(imageBytes)
-                                        : null,
-                                    child: imageBytes == null
-                                        ? Icon(
-                                            Icons.person_rounded,
-                                            color: colors.primary,
-                                          )
-                                        : null,
-                                  ),
-                                  title: Text(
-                                    data['Fullname']?.toString() ?? '',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  subtitle: Text(
-                                    'IDGV: ${data['IDGV'] ?? ''}  •  '
-                                    'Số lớp: ${data['SumClass'] ?? 0}',
-                                  ),
-                                  trailing:
-                                      const Icon(Icons.chevron_right_rounded),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: addGiangVien,
-        icon: const Icon(Icons.person_add_alt_1_rounded),
-        label: const Text('Thêm giảng viên'),
       ),
     );
   }
@@ -331,31 +380,36 @@ class _StatCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: colors.primaryContainer,
-              child: Icon(icon, color: colors.primary),
-            ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE8EBF2)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: colors.primaryContainer,
+            child: Icon(icon, color: colors.primary),
+          ),
+          const SizedBox(width: 14),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: Colors.grey.shade600)),
+              const SizedBox(height: 2),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
                 ),
-              ],
-            ),
-          ],
-        ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
